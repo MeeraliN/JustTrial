@@ -6,17 +6,19 @@ Production-focused, self-hosted house rental marketplace for:
 - **Admin Panel:** React + TypeScript + Vite
 - **Backend API:** Laravel + MySQL
 
-This repository currently contains **Phase 1** deliverables:
+This repository now contains **implemented scaffolds + core APIs**:
 
-1. System architecture and security baseline
-2. MySQL schema design
-3. Initial REST API contract (OpenAPI)
-4. Self-hosting deployment guide (cPanel/shared hosting and VPS)
+1. Laravel API project with Sanctum auth + RBAC base
+2. Core property and admin CRUD APIs
+3. React Admin Panel implementation (Vite + TS + Query + RHF + Zod + i18n)
+4. Flutter app scaffold with Material 3 + Riverpod + GoRouter
+5. System architecture, schema and self-hosting documentation
 
 ## Deployment Status
 
 - **GitHub deployment:** Pushed to branch `meeralin-rentdirect-platform`.
-- **Live preview website:** Published via GitHub Pages (static concept preview, not full app runtime).
+- **Live preview website:** Published via GitHub Pages (UI preview).
+- **Full API + Admin runtime:** implemented in code and runnable locally/self-hosted.
 
 ## Repository Layout
 
@@ -26,6 +28,14 @@ backend/
     openapi.yaml
   database/
     rentdirect_schema.sql
+  laravel-api/
+    app/
+    routes/api.php
+    database/
+admin/
+  react-admin/
+mobile/
+  flutter-app/
 docs/
   system-architecture.md
 deploy/
@@ -40,38 +50,58 @@ deploy/
 - Multi-language support with English fallback
 - Strong server-side authorization, validation and auditing
 
-## Planned Build Sequence
+## Run Instructions
 
-1. Planning and database design
-2. Laravel API
-3. Authentication and permissions
-4. React Admin Panel
-5. Flutter application
-6. Listings, search and maps
-7. Chat and notifications
-8. Ads, promotions and AI
-9. Testing, security and deployment
+### 1) Laravel API (`backend/laravel-api`)
 
-## How to Run What Exists in This Repo
+1. Install PHP 8.3+, Composer and MySQL.
+2. Copy env and configure DB:
+   - `cp .env.example .env`
+   - set `DB_CONNECTION=mysql` credentials in `.env`
+3. Install packages:
+   - `composer install`
+4. Generate app key and migrate:
+   - `php artisan key:generate`
+   - `php artisan migrate --seed`
+5. Run API:
+   - `php artisan serve`
+6. Base URL:
+   - `http://127.0.0.1:8000/api/v1`
 
-This repository is currently **Phase 1 design artifacts**. You can run/use it as follows:
+Default seeded admin:
 
-1. Clone the repository:
-   - `git clone https://github.com/MeeraliN/JustTrial.git`
-2. Import the database schema (MySQL 8+):
-   - `mysql -u <db_user> -p < backend/database/rentdirect_schema.sql`
-3. Open API contract:
-   - Use `backend/api/openapi.yaml` in Swagger Editor or Postman import.
-4. Follow deployment blueprint:
-   - `deploy/self-hosting-guide.md`
-5. Review architecture:
-   - `docs/system-architecture.md`
+- Email: `admin@rentdirect.test`
+- Password: `Admin@12345`
+
+### 2) React Admin (`admin/react-admin`)
+
+1. Create env:
+   - copy `.env.example` to `.env`
+2. Install packages:
+   - `npm install`
+3. Start:
+   - `npm run dev`
+4. Admin URL:
+   - `http://127.0.0.1:5173`
+
+### 3) Flutter App (`mobile/flutter-app`)
+
+1. Install Flutter SDK.
+2. In `mobile/flutter-app`:
+   - `flutter create .`
+   - `flutter pub get`
+   - `flutter run`
+
+### 4) Deployment
+
+- cPanel/VPS deployment guide: `deploy/self-hosting-guide.md`
+- Architecture reference: `docs/system-architecture.md`
 
 ## Clickable Links
 
 - **Repository:** https://github.com/MeeraliN/JustTrial
 - **Live Preview Website:** https://meeralin.github.io/JustTrial/
-- **Planned API URL:** https://api.example.com
-- **Planned Admin URL:** https://admin.example.com
-- **Planned Public Website:** https://example.com
+- **API (planned production):** https://api.example.com
+- **Admin (planned production):** https://admin.example.com
+- **Public Website (planned production):** https://example.com
 - **Releases (for future APK/EXE uploads):** https://github.com/MeeraliN/JustTrial/releases
