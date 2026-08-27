@@ -1,0 +1,335 @@
+openapi: 3.0.3
+info:
+  title: RentDirect API
+  version: 0.1.0
+  description: Initial API contract for RentDirect mobile and admin clients.
+servers:
+  - url: https://api.example.com/api/v1
+security:
+  - sanctumAuth: []
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Account created
+        '422':
+          description: Validation error
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login by email and password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login success
+        '401':
+          description: Invalid credentials
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke current access token
+      responses:
+        '204':
+          description: Logged out
+  /properties:
+    get:
+      tags: [Properties]
+      summary: Search property listings
+      security: []
+      parameters:
+        - in: query
+          name: city_id
+          schema: { type: integer }
+        - in: query
+          name: locality_id
+          schema: { type: integer }
+        - in: query
+          name: property_type
+          schema: { type: string }
+        - in: query
+          name: min_rent
+          schema: { type: number }
+        - in: query
+          name: max_rent
+          schema: { type: number }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: per_page
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: Paginated listing response
+    post:
+      tags: [Properties]
+      summary: Create property listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertyCreateRequest'
+      responses:
+        '201':
+          description: Created
+        '403':
+          description: Permission denied
+  /properties/{propertyId}:
+    get:
+      tags: [Properties]
+      summary: Get property detail
+      security: []
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Property detail
+        '404':
+          description: Not found
+    patch:
+      tags: [Properties]
+      summary: Update property listing
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertyUpdateRequest'
+      responses:
+        '200':
+          description: Updated
+        '403':
+          description: Permission denied
+  /properties/{propertyId}/status:
+    patch:
+      tags: [Moderation]
+      summary: Change listing status (approve/reject/pause/rent/expire)
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [draft, pending, active, rejected, paused, rented, expired]
+                rejection_reason:
+                  type: string
+      responses:
+        '200':
+          description: Status updated
+        '403':
+          description: Permission denied
+  /chats/threads:
+    get:
+      tags: [Chat]
+      summary: List current user chat threads
+      responses:
+        '200':
+          description: Chat thread list
+    post:
+      tags: [Chat]
+      summary: Create thread (optionally property-scoped)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [participant_user_id]
+              properties:
+                property_id: { type: integer, nullable: true }
+                participant_user_id: { type: integer }
+      responses:
+        '201':
+          description: Created
+  /chats/threads/{threadId}/messages:
+    get:
+      tags: [Chat]
+      summary: List thread messages
+      parameters:
+        - in: path
+          name: threadId
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Message list
+    post:
+      tags: [Chat]
+      summary: Send message
+      parameters:
+        - in: path
+          name: threadId
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message_type]
+              properties:
+                message_type:
+                  type: string
+                  enum: [text, image]
+                body:
+                  type: string
+                attachment_id:
+                  type: string
+      responses:
+        '201':
+          description: Message sent
+  /complaints:
+    post:
+      tags: [Complaints]
+      summary: Create complaint/report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, description]
+              properties:
+                property_id: { type: integer, nullable: true }
+                against_user_id: { type: integer, nullable: true }
+                title: { type: string, maxLength: 191 }
+                description: { type: string }
+      responses:
+        '201':
+          description: Complaint created
+    get:
+      tags: [Complaints]
+      summary: List complaints (permission filtered)
+      responses:
+        '200':
+          description: Complaint list
+  /admin/languages:
+    get:
+      tags: [Admin Localization]
+      summary: List configured languages
+      responses:
+        '200':
+          description: Language list
+    post:
+      tags: [Admin Localization]
+      summary: Create language
+      responses:
+        '201':
+          description: Created
+  /admin/staff:
+    get:
+      tags: [Admin Staff]
+      summary: List staff users
+      responses:
+        '200':
+          description: Staff list
+    post:
+      tags: [Admin Staff]
+      summary: Create staff account and assign roles
+      responses:
+        '201':
+          description: Staff created
+components:
+  securitySchemes:
+    sanctumAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [account_type, name, email, password, locale]
+      properties:
+        account_type:
+          type: string
+          enum: [tenant, owner, agent, business_advertiser]
+        name:
+          type: string
+          maxLength: 120
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        locale:
+          type: string
+          default: en
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    PropertyCreateRequest:
+      type: object
+      required:
+        - title
+        - description
+        - category_id
+        - property_type
+        - rent_amount
+        - city_id
+        - address_line1
+      properties:
+        title: { type: string, maxLength: 191 }
+        description: { type: string }
+        category_id: { type: integer }
+        property_type:
+          type: string
+          enum: [house, flat, room, pg, hostel, shop, office]
+        rent_amount: { type: number }
+        deposit_amount: { type: number, nullable: true }
+        maintenance_amount: { type: number, nullable: true }
+        city_id: { type: integer }
+        locality_id: { type: integer, nullable: true }
+        address_line1: { type: string }
+        address_line2: { type: string, nullable: true }
+        pincode: { type: string, nullable: true }
+        latitude: { type: number, nullable: true }
+        longitude: { type: number, nullable: true }
+        location_precision:
+          type: string
+          enum: [exact, approximate]
+          default: approximate
+    PropertyUpdateRequest:
+      allOf:
+        - $ref: '#/components/schemas/PropertyCreateRequest'
