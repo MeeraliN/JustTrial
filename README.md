@@ -18,6 +18,7 @@ This repository now contains **implemented scaffolds + core APIs**:
 
 - **GitHub deployment:** Pushed to branch `meeralin-rentdirect-platform`.
 - **Live preview website:** Published via GitHub Pages (UI preview).
+- **Interactive Admin demo (website):** Published via GitHub Pages (mock-data demo).
 - **Full API + Admin runtime:** implemented in code and runnable locally/self-hosted.
 
 ## Repository Layout
@@ -101,6 +102,7 @@ Default seeded admin:
 
 - **Repository:** https://github.com/MeeraliN/JustTrial
 - **Live Preview Website:** https://meeralin.github.io/JustTrial/
+- **Admin Demo Website:** https://meeralin.github.io/JustTrial/demo-admin/
 - **API (planned production):** https://api.example.com
 - **Admin (planned production):** https://admin.example.com
 - **Public Website (planned production):** https://example.com

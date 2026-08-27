@@ -54,6 +54,39 @@ type Property = {
   city?: { name: string; state_name: string }
 }
 
+const IS_DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
+
+const demoUser: User = {
+  id: 1,
+  name: 'Demo Super Admin',
+  email: 'admin@rentdirect.test',
+  account_type: 'staff',
+  locale: 'en',
+}
+
+let demoLanguages: Language[] = [
+  { id: 1, code: 'en', name: 'English', native_name: 'English', is_default: true, is_enabled: true },
+  { id: 2, code: 'hi', name: 'Hindi', native_name: 'हिन्दी', is_default: false, is_enabled: true },
+]
+
+let demoCategories: Category[] = [
+  { id: 1, category_group: 'residential', slug: 'house', name: 'House', is_active: true },
+  { id: 2, category_group: 'residential', slug: 'flat', name: 'Flat', is_active: true },
+  { id: 3, category_group: 'commercial', slug: 'shop', name: 'Shop', is_active: true },
+]
+
+let demoCities: City[] = [
+  { id: 1, name: 'Mumbai', state_name: 'Maharashtra', country_name: 'India', is_active: true },
+  { id: 2, name: 'Delhi', state_name: 'Delhi', country_name: 'India', is_active: true },
+  { id: 3, name: 'Bengaluru', state_name: 'Karnataka', country_name: 'India', is_active: true },
+]
+
+let demoProperties: Property[] = [
+  { id: 101, title: '2 BHK Flat near Andheri', property_type: 'flat', rent_amount: '28000.00', status: 'active', city: { name: 'Mumbai', state_name: 'Maharashtra' } },
+  { id: 102, title: 'Furnished PG for Students', property_type: 'pg', rent_amount: '9000.00', status: 'active', city: { name: 'Delhi', state_name: 'Delhi' } },
+  { id: 103, title: 'Commercial Shop on Main Road', property_type: 'shop', rent_amount: '45000.00', status: 'active', city: { name: 'Bengaluru', state_name: 'Karnataka' } },
+]
+
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -93,6 +126,121 @@ type CityFormInput = z.input<typeof citySchema>
 const TOKEN_KEY = 'rentdirect-admin-token'
 const USER_KEY = 'rentdirect-admin-user'
 
+async function loginRequest(values: LoginInput): Promise<AuthResponse> {
+  if (IS_DEMO_MODE) {
+    return {
+      token: 'demo-token',
+      user: { ...demoUser, email: values.email },
+    }
+  }
+
+  const { data } = await api.post<AuthResponse>('/auth/login', { ...values, device_name: 'react-admin' })
+  return data
+}
+
+async function logoutRequest(token: string): Promise<void> {
+  if (IS_DEMO_MODE) {
+    return
+  }
+
+  await api.post('/auth/logout', undefined, { headers: authHeaders(token) })
+}
+
+async function healthRequest(): Promise<{ status: string }> {
+  if (IS_DEMO_MODE) {
+    return { status: 'ok-demo' }
+  }
+
+  const { data } = await api.get<{ status: string }>('/health')
+  return data
+}
+
+async function meRequest(token: string): Promise<User> {
+  if (IS_DEMO_MODE) {
+    return demoUser
+  }
+
+  const { data } = await api.get<{ user: User }>('/auth/me', { headers: authHeaders(token) })
+  return data.user
+}
+
+async function propertiesRequest(token: string): Promise<Property[]> {
+  if (IS_DEMO_MODE) {
+    return demoProperties
+  }
+
+  const { data } = await api.get<{ data: Property[] }>('/properties?status=active&per_page=20', {
+    headers: authHeaders(token),
+  })
+  return data.data
+}
+
+async function languagesRequest(token: string): Promise<Language[]> {
+  if (IS_DEMO_MODE) {
+    return demoLanguages
+  }
+
+  const { data } = await api.get<Language[]>('/admin/languages', { headers: authHeaders(token) })
+  return data
+}
+
+async function createLanguageRequest(token: string, values: LanguageFormInput): Promise<void> {
+  const parsed = languageSchema.parse(values)
+
+  if (IS_DEMO_MODE) {
+    const nextId = demoLanguages.length > 0 ? Math.max(...demoLanguages.map((item) => item.id)) + 1 : 1
+    if (parsed.is_default) {
+      demoLanguages = demoLanguages.map((item) => ({ ...item, is_default: false }))
+    }
+    demoLanguages = [...demoLanguages, { id: nextId, ...parsed }]
+    return
+  }
+
+  await api.post('/admin/languages', parsed, { headers: authHeaders(token) })
+}
+
+async function categoriesRequest(token: string): Promise<Category[]> {
+  if (IS_DEMO_MODE) {
+    return demoCategories
+  }
+
+  const { data } = await api.get<Category[]>('/admin/categories', { headers: authHeaders(token) })
+  return data
+}
+
+async function createCategoryRequest(token: string, values: CategoryFormInput): Promise<void> {
+  const parsed = categorySchema.parse(values)
+
+  if (IS_DEMO_MODE) {
+    const nextId = demoCategories.length > 0 ? Math.max(...demoCategories.map((item) => item.id)) + 1 : 1
+    demoCategories = [...demoCategories, { id: nextId, category_group: parsed.category_group, slug: parsed.slug, name: parsed.name, is_active: parsed.is_active }]
+    return
+  }
+
+  await api.post('/admin/categories', parsed, { headers: authHeaders(token) })
+}
+
+async function citiesRequest(token: string): Promise<City[]> {
+  if (IS_DEMO_MODE) {
+    return demoCities
+  }
+
+  const { data } = await api.get<City[]>('/admin/cities', { headers: authHeaders(token) })
+  return data
+}
+
+async function createCityRequest(token: string, values: CityFormInput): Promise<void> {
+  const parsed = citySchema.parse(values)
+
+  if (IS_DEMO_MODE) {
+    const nextId = demoCities.length > 0 ? Math.max(...demoCities.map((item) => item.id)) + 1 : 1
+    demoCities = [...demoCities, { id: nextId, ...parsed }]
+    return
+  }
+
+  await api.post('/admin/cities', parsed, { headers: authHeaders(token) })
+}
+
 function useSession() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY))
   const [user, setUser] = useState<User | null>(() => {
@@ -122,14 +270,11 @@ function LoginPage({ onLogin }: { onLogin: (payload: AuthResponse) => void }) {
   const { t } = useTranslation()
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: IS_DEMO_MODE ? 'demo@rentdirect.test' : '', password: IS_DEMO_MODE ? 'Demo@1234' : '' },
   })
 
   const mutation = useMutation({
-    mutationFn: async (values: LoginInput) => {
-      const { data } = await api.post<AuthResponse>('/auth/login', { ...values, device_name: 'react-admin' })
-      return data
-    },
+    mutationFn: loginRequest,
     onSuccess: (data) => {
       onLogin(data)
       navigate('/')
@@ -146,6 +291,7 @@ function LoginPage({ onLogin }: { onLogin: (payload: AuthResponse) => void }) {
       >
         <h1>{t('appName')}</h1>
         <h2>{t('login')}</h2>
+        {IS_DEMO_MODE ? <small>Demo mode enabled: data is mock and stored in-browser.</small> : null}
 
         <label>{t('email')}</label>
         <input type="email" {...form.register('email')} />
@@ -203,9 +349,7 @@ function ProtectedLayout({
             type="button"
             onClick={async () => {
               try {
-                await api.post('/auth/logout', undefined, { headers: authHeaders(token) })
-              } catch {
-                // local logout still applies
+                await logoutRequest(token)
               } finally {
                 onLogout()
               }
@@ -232,18 +376,12 @@ function ProtectedLayout({
 function DashboardPage({ token }: { token: string }) {
   const health = useQuery({
     queryKey: ['health'],
-    queryFn: async () => {
-      const { data } = await api.get<{ status: string }>('/health')
-      return data
-    },
+    queryFn: healthRequest,
   })
 
   const me = useQuery({
-    queryKey: ['me'],
-    queryFn: async () => {
-      const { data } = await api.get<{ user: User }>('/auth/me', { headers: authHeaders(token) })
-      return data.user
-    },
+    queryKey: ['me', token],
+    queryFn: async () => meRequest(token),
   })
 
   return (
@@ -258,13 +396,8 @@ function DashboardPage({ token }: { token: string }) {
 
 function PropertiesPage({ token }: { token: string }) {
   const query = useQuery({
-    queryKey: ['properties'],
-    queryFn: async () => {
-      const { data } = await api.get<{ data: Property[] }>('/properties?status=active&per_page=20', {
-        headers: authHeaders(token),
-      })
-      return data.data
-    },
+    queryKey: ['properties', token],
+    queryFn: async () => propertiesRequest(token),
   })
 
   return (
@@ -313,20 +446,15 @@ function LanguagesPage({ token }: { token: string }) {
   })
 
   const query = useQuery({
-    queryKey: ['languages'],
-    queryFn: async () => {
-      const { data } = await api.get<Language[]>('/admin/languages', { headers: authHeaders(token) })
-      return data
-    },
+    queryKey: ['languages', token],
+    queryFn: async () => languagesRequest(token),
   })
 
   const mutation = useMutation({
-    mutationFn: async (values: LanguageFormInput) => {
-      await api.post('/admin/languages', languageSchema.parse(values), { headers: authHeaders(token) })
-    },
+    mutationFn: async (values: LanguageFormInput) => createLanguageRequest(token, values),
     onSuccess: async () => {
       form.reset()
-      await queryClient.invalidateQueries({ queryKey: ['languages'] })
+      await queryClient.invalidateQueries({ queryKey: ['languages', token] })
     },
   })
 
@@ -383,20 +511,15 @@ function CategoriesPage({ token }: { token: string }) {
   })
 
   const query = useQuery({
-    queryKey: ['categories'],
-    queryFn: async () => {
-      const { data } = await api.get<Category[]>('/admin/categories', { headers: authHeaders(token) })
-      return data
-    },
+    queryKey: ['categories', token],
+    queryFn: async () => categoriesRequest(token),
   })
 
   const mutation = useMutation({
-    mutationFn: async (values: CategoryFormInput) => {
-      await api.post('/admin/categories', categorySchema.parse(values), { headers: authHeaders(token) })
-    },
+    mutationFn: async (values: CategoryFormInput) => createCategoryRequest(token, values),
     onSuccess: async () => {
       form.reset({ category_group: 'residential', slug: '', name: '', is_active: true, sort_order: 0 })
-      await queryClient.invalidateQueries({ queryKey: ['categories'] })
+      await queryClient.invalidateQueries({ queryKey: ['categories', token] })
     },
   })
 
@@ -455,20 +578,15 @@ function CitiesPage({ token }: { token: string }) {
   })
 
   const query = useQuery({
-    queryKey: ['cities'],
-    queryFn: async () => {
-      const { data } = await api.get<City[]>('/admin/cities', { headers: authHeaders(token) })
-      return data
-    },
+    queryKey: ['cities', token],
+    queryFn: async () => citiesRequest(token),
   })
 
   const mutation = useMutation({
-    mutationFn: async (values: CityFormInput) => {
-      await api.post('/admin/cities', citySchema.parse(values), { headers: authHeaders(token) })
-    },
+    mutationFn: async (values: CityFormInput) => createCityRequest(token, values),
     onSuccess: async () => {
       form.reset({ name: '', state_name: '', country_name: 'India', is_active: true })
-      await queryClient.invalidateQueries({ queryKey: ['cities'] })
+      await queryClient.invalidateQueries({ queryKey: ['cities', token] })
     },
   })
 
@@ -515,7 +633,11 @@ export default function App() {
 
   const app = useMemo(() => {
     if (!session.token || !session.user) {
-      return <Routes><Route path="*" element={<LoginPage onLogin={session.login} />} /></Routes>
+      return (
+        <Routes>
+          <Route path="*" element={<LoginPage onLogin={session.login} />} />
+        </Routes>
+      )
     }
 
     return <ProtectedLayout token={session.token} userName={session.user.name} onLogout={session.logout} />
