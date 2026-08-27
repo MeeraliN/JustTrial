@@ -15,8 +15,8 @@ This repository currently contains **Phase 1** deliverables:
 
 ## Deployment Status
 
-- **GitHub deployment:** Not deployed by me yet (no commit/push has been done from this session).
-- **Live website/app:** Not available yet because this repo currently has planning and schema/API artifacts, not the full runnable Flutter/React/Laravel apps.
+- **GitHub deployment:** Pushed to branch `meeralin-rentdirect-platform`.
+- **Live preview website:** Published via GitHub Pages (static concept preview, not full app runtime).
 
 ## Repository Layout
 
@@ -70,6 +70,7 @@ This repository is currently **Phase 1 design artifacts**. You can run/use it as
 ## Clickable Links
 
 - **Repository:** https://github.com/MeeraliN/JustTrial
+- **Live Preview Website:** https://meeralin.github.io/JustTrial/
 - **Planned API URL:** https://api.example.com
 - **Planned Admin URL:** https://admin.example.com
 - **Planned Public Website:** https://example.com
