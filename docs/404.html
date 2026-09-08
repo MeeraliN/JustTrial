@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0; url=./" />
+    <title>Redirecting...</title>
+    <script>
+      window.location.href = window.location.pathname.includes('/demo-admin')
+        ? window.location.pathname.substring(0, window.location.pathname.indexOf('/demo-admin') + 12)
+        : '/JustTrial/';
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to <a href="./">RentDirect Preview</a>...</p>
+  </body>
+</html>
