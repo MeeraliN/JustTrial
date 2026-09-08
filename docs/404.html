@@ -2,15 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="refresh" content="0; url=./" />
     <title>Redirecting...</title>
     <script>
-      window.location.href = window.location.pathname.includes('/demo-admin')
-        ? window.location.pathname.substring(0, window.location.pathname.indexOf('/demo-admin') + 12)
-        : '/JustTrial/';
+      // GitHub Pages has no server-side routing, so a hard refresh on a
+      // client-side route (e.g. /JustTrial/demo-admin/properties) 404s.
+      // Rewrite it into the app's HashRouter form and redirect there.
+      (function () {
+        var path = window.location.pathname;
+        var marker = '/demo-admin/';
+        var idx = path.indexOf(marker);
+
+        if (idx !== -1) {
+          var base = path.substring(0, idx + marker.length);
+          var rest = path.substring(idx + marker.length);
+          window.location.replace(base + (rest ? '#/' + rest : '') + window.location.search + window.location.hash);
+          return;
+        }
+
+        window.location.replace('/JustTrial/');
+      })();
     </script>
   </head>
   <body>
-    <p>Redirecting to <a href="./">RentDirect Preview</a>...</p>
+    <p>Redirecting to <a href="/JustTrial/">RentDirect Preview</a>...</p>
   </body>
 </html>
